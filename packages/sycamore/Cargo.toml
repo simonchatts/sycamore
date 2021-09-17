@@ -57,7 +57,7 @@ wasm-bindgen-test = "0.3.28"
 
 [features]
 default = ["dom", "wasm-bindgen-interning"]
-dom = []
+dom = ["once_cell"]
 experimental-builder-agnostic = []
 experimental-builder-html = ["experimental-builder-agnostic"]
 experimental-hydrate = ["sycamore-macro/experimental-hydrate"]

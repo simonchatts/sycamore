@@ -1,9 +1,11 @@
 //! Rendering backend for the DOM.
 
 use std::cell::Cell;
+use std::collections::HashSet;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 
+use once_cell::sync::OnceCell;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::{intern, JsCast};
 use web_sys::{Comment, Element, Node, Text};
@@ -50,6 +52,7 @@ impl NodeId {
 pub struct DomNode {
     id: Cell<NodeId>,
     node: Node,
+    is_html: bool,
 }
 
 impl DomNode {
@@ -77,6 +80,7 @@ impl DomNode {
         Self {
             id: Default::default(),
             node,
+            is_html: false
         }
     }
 }
@@ -135,14 +139,19 @@ impl GenericNode for DomNode {
     type EventType = web_sys::Event;
 
     fn element(tag: &str) -> Self {
-        let node = document()
-            .create_element(intern(tag))
-            .unwrap_throw()
-            .dyn_into()
-            .unwrap_throw();
+        let is_svg = svg_elements().contains(tag);
+        let node = (if is_svg {
+            document().create_element_ns(SVG_NAMESPACE, intern(tag))
+        } else {
+            document().create_element(intern(tag))
+        })
+        .unwrap_throw()
+        .dyn_into()
+        .unwrap_throw();
         DomNode {
             id: Default::default(),
             node,
+            is_html: !is_svg,
         }
     }
 
@@ -151,6 +160,7 @@ impl GenericNode for DomNode {
         DomNode {
             id: Default::default(),
             node,
+            is_html: true,
         }
     }
 
@@ -159,6 +169,7 @@ impl GenericNode for DomNode {
         DomNode {
             id: Default::default(),
             node,
+            is_html: true,
         }
     }
 
@@ -177,7 +188,13 @@ impl GenericNode for DomNode {
     }
 
     fn set_class_name(&self, value: &str) {
-        self.node.unchecked_ref::<Element>().set_class_name(value);
+        // This optimization isn't valid for SVG, for which `className` is an
+        // instance of `SVGAnimatedString`, so use the regular path there.
+        if self.is_html {
+            self.node.unchecked_ref::<Element>().set_class_name(value);
+        } else {
+            self.set_attribute("class", value);
+        }
     }
 
     fn add_class(&self, class: &str) {
@@ -209,9 +226,13 @@ impl GenericNode for DomNode {
     }
 
     fn first_child(&self) -> Option<Self> {
-        self.node.first_child().map(|node| Self {
-            id: Default::default(),
-            node,
+        self.node.first_child().map(|node| {
+            let is_html = is_not_svg(&node);
+            Self {
+                id: Default::default(),
+                node,
+                is_html,
+            }
         })
     }
 
@@ -237,16 +258,24 @@ impl GenericNode for DomNode {
     }
 
     fn parent_node(&self) -> Option<Self> {
-        self.node.parent_node().map(|node| Self {
-            id: Default::default(),
-            node,
+        self.node.parent_node().map(|node| {
+            let is_html = is_not_svg(&node);
+            Self {
+                id: Default::default(),
+                node,
+                is_html,
+            }
         })
     }
 
     fn next_sibling(&self) -> Option<Self> {
-        self.node.next_sibling().map(|node| Self {
-            id: Default::default(),
-            node,
+        self.node.next_sibling().map(|node| {
+            let is_html = is_not_svg(&node);
+            Self {
+                id: Default::default(),
+                node,
+                is_html,
+            }
         })
     }
 
@@ -277,6 +306,7 @@ impl GenericNode for DomNode {
         Self {
             node: self.node.clone_node_with_deep(true).unwrap_throw(),
             id: Default::default(),
+            is_html: self.is_html,
         }
     }
 }
@@ -324,11 +354,107 @@ pub fn render_to(template: impl FnOnce() -> View<DomNode>, parent: &Node) {
 pub fn render_get_scope(template: impl FnOnce() -> View<DomNode>, parent: &Node) -> ReactiveScope {
     create_scope(|| {
         insert(
-            &DomNode::from_web_sys(parent.clone()),
+            &DomNode {
+                id: Default::default(),
+                node: parent.clone(),
+                is_html: is_not_svg(parent),
+            },
             template(),
             None,
             None,
             false,
         );
+    })
+}
+
+const SVG_NAMESPACE: Option<&str> = Some("http://www.w3.org/2000/svg");
+
+// False if a [Node] is in the SVG namespace
+fn is_not_svg(node: &Node) -> bool {
+    node.lookup_namespace_uri(SVG_NAMESPACE).is_none()
+}
+
+// SVG element names that aren't in HTML, so can be heuristically SVG-namespaced
+//
+// (The clashing ones are a, script, title)
+//
+// SVG elements: https://www.w3.org/TR/SVG2/eltindex.html
+// HTML elements: https://html.spec.whatwg.org/multipage/indices.html#elements-3
+fn svg_elements() -> &'static HashSet<&'static str> {
+    static SVG_ELEMENTS: OnceCell<HashSet<&'static str>> = OnceCell::new();
+    SVG_ELEMENTS.get_or_init(|| {
+        [
+            "animate",
+            "animateMotion",
+            "animateTransform",
+            "circle",
+            "clipPath",
+            "defs",
+            "desc",
+            "discard",
+            "ellipse",
+            "feBlend",
+            "feColorMatrix",
+            "feComponentTransfer",
+            "feComposite",
+            "feConvolveMatrix",
+            "feDiffuseLighting",
+            "feDisplacementMap",
+            "feDistantLight",
+            "feDropShadow",
+            "feFlood",
+            "feFuncA",
+            "feFuncB",
+            "feFuncG",
+            "feFuncR",
+            "feGaussianBlur",
+            "feImage",
+            "feMerge",
+            "feMergeNode",
+            "feMorphology",
+            "feOffset",
+            "fePointLight",
+            "feSpecularLighting",
+            "feSpotLight",
+            "feTile",
+            "feTurbulence",
+            "filter",
+            "foreignObject",
+            "g",
+            "hatch",
+            "hatchpath",
+            "image",
+            "line",
+            "linearGradient",
+            "marker",
+            "mask",
+            "mesh",
+            "meshgradient",
+            "meshpatch",
+            "meshrow",
+            "metadata",
+            "mpath",
+            "path",
+            "pattern",
+            "polygon",
+            "polyline",
+            "radialGradient",
+            "rect",
+            "set",
+            "stop",
+            "style",
+            "svg",
+            "switch",
+            "symbol",
+            "text",
+            "textPath",
+            "tspan",
+            "unknown",
+            "use",
+            "view",
+        ]
+        .iter()
+        .copied()
+        .collect()
     })
 }
