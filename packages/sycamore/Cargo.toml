@@ -47,7 +47,7 @@ wasm-bindgen-test = "0.3.28"
 
 [features]
 default = ["dom"]
-dom = []
+dom = ["once_cell"]
 ssr = ["html-escape", "once_cell"]
 serde = ["sycamore-reactive/serde"]
 
