@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1631810322352,
-  "repoUrl": "https://github.com/sycamore-rs/sycamore",
+  "lastUpdate": 1637832044483,
+  "repoUrl": "https://github.com/simonchatts/sycamore",
   "entries": {
     "Benchmark": [
       {
@@ -9191,6 +9191,66 @@ window.BENCHMARK_DATA = {
             "name": "ssr_medium",
             "value": 68442,
             "range": "± 109",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "alsuren@gmail.com",
+            "name": "David Laban",
+            "username": "alsuren"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "63ec4244701887a9163f078de5beee3099b4148e",
+          "message": "render_temporarily_to() helper (#303)\n\n* render_temporarily_to() helper\r\n\r\n* reexport render_temporarily_to() at top level\r\n\r\n* rename to render_get_scope; dry",
+          "timestamp": "2021-11-23T12:53:20-08:00",
+          "tree_id": "4f23f088b141cba9bae8a640e16915f49853216e",
+          "url": "https://github.com/simonchatts/sycamore/commit/63ec4244701887a9163f078de5beee3099b4148e"
+        },
+        "date": 1637832043344,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "reactivity_signals",
+            "value": 41174,
+            "range": "± 201",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reactivity_effects",
+            "value": 556167,
+            "range": "± 29056",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reactivity_map_indexed",
+            "value": 24643,
+            "range": "± 106",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reactivity_map_keyed",
+            "value": 39061,
+            "range": "± 44",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "ssr_small",
+            "value": 1407,
+            "range": "± 5",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "ssr_medium",
+            "value": 58488,
+            "range": "± 118",
             "unit": "ns/iter"
           }
         ]
