@@ -9,3 +9,4 @@ Cargo.lock
 
 # VS Code folder
 .vscode
+/.direnv/
