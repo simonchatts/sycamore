@@ -4,13 +4,13 @@ use sycamore::prelude::*;
 fn app() -> View<G> {
     let counter = Signal::new(0);
 
-    create_effect(cloned!((counter) => move || {
+    create_effect(move || {
         log::info!("Counter value: {}", *counter.get());
-    }));
+    });
 
-    let increment = cloned!((counter) => move |_| counter.set(*counter.get() + 1));
+    let increment = move |_| counter.set(*counter.get() + 1);
 
-    let reset = cloned!((counter) => move |_| counter.set(0));
+    let reset = move |_| counter.set(0);
 
     view! {
         div {

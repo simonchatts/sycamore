@@ -7,7 +7,7 @@ fn app() -> View<G> {
         view! { "I am an item in a fragment"},
     ]);
 
-    let add_item = cloned!((items) => move |_| {
+    let add_item = move |_| {
         items.set(
             (*items.get())
                 .clone()
@@ -15,7 +15,7 @@ fn app() -> View<G> {
                 .chain(Some(view! { "New item" }))
                 .collect(),
         );
-    });
+    };
 
     view! {
         div {

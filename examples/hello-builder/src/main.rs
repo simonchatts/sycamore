@@ -8,15 +8,13 @@ fn app() -> View<G> {
     div()
         .child(
             h1().text("Hello ")
-                .dyn_child(cloned!((name) => move || {
-                    if *create_selector(cloned!((name) => move || !name.get().is_empty())).get() {
-                        span()
-                            .dyn_text(cloned!((name) => move || name.get().to_string()))
-                            .build()
+                .dyn_child(move || {
+                    if *create_selector(move || !name.get().is_empty()).get() {
+                        span().dyn_text(move || name.get().to_string()).build()
                     } else {
                         span().text("World").build()
                     }
-                }))
+                })
                 .text("!")
                 .build(),
         )

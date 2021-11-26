@@ -17,9 +17,9 @@ fn my_component(num: ReadSignal<i32>) -> View<G> {
 fn app() -> View<G> {
     let state = Signal::new(1);
 
-    let increment = cloned!((state) => move |_| {
+    let increment = move |_| {
         state.set(*state.get() + 1);
-    });
+    };
 
     view! {
         div {

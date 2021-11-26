@@ -9,7 +9,7 @@ pub fn header() -> View<G> {
     let app_state = use_context::<AppState>();
     let value = Signal::new(String::new());
 
-    let handle_submit = cloned!((app_state, value) => move |event: Event| {
+    let handle_submit = cloned!((app_state) => move |event: Event| {
         let event: KeyboardEvent = event.unchecked_into();
 
         if event.key() == "Enter" {

@@ -20,7 +20,7 @@ pub struct Todo {
 
 #[derive(Debug, Clone)]
 pub struct AppState {
-    pub todos: Signal<Vec<Signal<Todo>>>,
+    pub todos: Signal<Vec<DynSignal<Todo>>>,
     pub filter: Signal<Filter>,
 }
 
@@ -32,7 +32,7 @@ impl AppState {
                 .as_ref()
                 .clone()
                 .into_iter()
-                .chain(Some(Signal::new(Todo {
+                .chain(Some(DynSignal::new(Todo {
                     title,
                     completed: false,
                     id: Uuid::new_v4(),

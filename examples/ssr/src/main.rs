@@ -11,9 +11,9 @@ fn app() -> View<G> {
             h1 {
                 "Hello "
                 ({if !name.get().is_empty() {
-                    cloned!((name) => view! {
+                    view! {
                         span { (name.get()) }
-                    })
+                    }
                 } else {
                     view! { span { "World" } }
                 }})

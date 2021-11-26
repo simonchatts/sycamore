@@ -21,10 +21,10 @@ pub fn list() -> View<G> {
     // We need a separate signal for checked because clicking the checkbox will detach the binding
     // between the attribute and the view.
     let checked = Signal::new(false);
-    create_effect(cloned!((checked) => move || {
+    create_effect(move || {
         // Calling checked.set will also update the `checked` property on the input element.
         checked.set(*todos_left.get() == 0)
-    }));
+    });
 
     view! {
         section(class="main") {

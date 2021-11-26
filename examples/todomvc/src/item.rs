@@ -5,7 +5,7 @@ use web_sys::{Event, HtmlInputElement, KeyboardEvent};
 use crate::{AppState, Todo};
 
 #[component(Item<G>)]
-pub fn item(todo: Signal<Todo>) -> View<G> {
+pub fn item(todo: DynSignal<Todo>) -> View<G> {
     let app_state = use_context::<AppState>();
 
     let title = cloned!((todo) => move || todo.get().title.clone());
@@ -16,10 +16,10 @@ pub fn item(todo: Signal<Todo>) -> View<G> {
     let input_ref = NodeRef::<G>::new();
     let value = Signal::new("".to_string());
 
-    let handle_input = cloned!((value) => move |event: Event| {
+    let handle_input = move |event: Event| {
         let target: HtmlInputElement = event.target().unwrap().unchecked_into();
         value.set(target.value());
-    });
+    };
 
     let toggle_completed = cloned!((todo) => move |_| {
         todo.set(Todo {
@@ -28,13 +28,13 @@ pub fn item(todo: Signal<Todo>) -> View<G> {
         });
     });
 
-    let handle_dblclick = cloned!((title, editing, input_ref, value) => move |_| {
+    let handle_dblclick = cloned!((input_ref, title) => move |_| {
         editing.set(true);
         input_ref.get::<DomNode>().unchecked_into::<HtmlInputElement>().focus().unwrap();
         value.set(title());
     });
 
-    let handle_blur = cloned!((todo, app_state, editing, value) => move || {
+    let handle_blur = cloned!((todo, app_state) => move || {
         editing.set(false);
 
         let mut value = value.get().as_ref().clone();
@@ -50,7 +50,7 @@ pub fn item(todo: Signal<Todo>) -> View<G> {
         }
     });
 
-    let handle_submit = cloned!((editing, input_ref, handle_blur, title) => move |event: Event| {
+    let handle_submit = cloned!((input_ref, handle_blur, title) => move |event: Event| {
         let event: KeyboardEvent = event.unchecked_into();
         match event.key().as_str() {
             "Enter" => handle_blur(),
@@ -74,12 +74,13 @@ pub fn item(todo: Signal<Todo>) -> View<G> {
         checked.set(*completed.get())
     }));
 
-    let class = cloned!((completed, editing) => move || {
-        format!("{} {}",
+    let class = move || {
+        format!(
+            "{} {}",
             if *completed.get() { "completed" } else { "" },
             if *editing.get() { "editing" } else { "" }
         )
-    });
+    };
 
     view! {
         li(class=class()) {
