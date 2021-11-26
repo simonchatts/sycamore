@@ -5,7 +5,7 @@ use std::rc::Rc;
 
 use js_sys::Date;
 
-use crate::reactive::Signal;
+use crate::reactive::{ReadSignalTrait, Signal, SignalTrait};
 use crate::utils::{loop_raf, Task};
 
 /// Describes a trait that can be linearly interpolate between two points.

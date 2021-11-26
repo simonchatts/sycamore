@@ -8,7 +8,9 @@ use crate::view::View;
 use js_sys::Reflect;
 use std::collections::HashMap;
 use std::iter::FromIterator;
-use sycamore_reactive::{cloned, create_effect, create_memo, ReadSignal, Signal};
+use sycamore_reactive::{
+    cloned, create_effect, create_memo, ReadSignal, ReadSignalTrait, Signal, SignalTrait,
+};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 

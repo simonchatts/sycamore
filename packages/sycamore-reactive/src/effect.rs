@@ -50,7 +50,7 @@ impl Listener {
     /// Should be called when re-executing an effect to recreate all dependencies.
     fn clear_dependencies(&mut self) {
         for dependency in &self.dependencies {
-            dependency.signal().unsubscribe(Rc::as_ptr(&self.callback));
+            dependency.as_ref().unsubscribe(Rc::as_ptr(&self.callback));
         }
         self.dependencies.clear();
     }
@@ -203,8 +203,10 @@ impl ReactiveScopeWeak {
 
 pub(super) type CallbackPtr = *const RefCell<dyn FnMut()>;
 
+// @@@ was pub(crate)
+#[doc(hidden)]
 #[derive(Clone)]
-pub(super) struct Callback(pub(super) Weak<RefCell<dyn FnMut()>>);
+pub struct Callback(pub(super) Weak<RefCell<dyn FnMut()>>);
 
 impl Callback {
     #[must_use = "returned value must be manually called"]
@@ -218,24 +220,29 @@ impl Callback {
 }
 
 /// A strong backlink to a [`Signal`] for any type `T`.
-#[derive(Clone)]
-pub(super) struct Dependency(pub(super) Rc<dyn AnySignalInner>);
+// #[derive(Clone)]
+pub(super) struct Dependency(pub(super) AnySigRef);
 
-impl Dependency {
-    fn signal(&self) -> Rc<dyn AnySignalInner> {
-        Rc::clone(&self.0)
+// @@@ coalesce AnySigRef and Dependency
+
+impl AsRef<dyn AnySignalInner> for Dependency {
+    fn as_ref(&self) -> &(dyn AnySignalInner + 'static) {
+        match self.0 {
+            AnySigRef::Static(inner) => inner,
+            AnySigRef::Dynamic(ref rc) => rc.as_ref(),
+        }
     }
 }
 
 impl Hash for Dependency {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        Rc::as_ptr(&self.0).hash(state);
+        self.0.as_ptr().hash(state);
     }
 }
 
 impl PartialEq for Dependency {
     fn eq(&self, other: &Self) -> bool {
-        ptr::eq::<()>(Rc::as_ptr(&self.0).cast(), Rc::as_ptr(&other.0).cast())
+        ptr::eq::<()>(self.0.as_ptr().cast(), other.0.as_ptr().cast())
     }
 }
 impl Eq for Dependency {}
@@ -305,7 +312,7 @@ fn _create_effect(mut effect: Box<dyn FnMut()>) {
                 // dependencies.
                 for old_dependency in old_dependencies.difference(&listener_ref.dependencies) {
                     old_dependency
-                        .signal()
+                        .as_ref()
                         .unsubscribe(listener_ref.callback.as_ref());
                 }
 
@@ -313,7 +320,7 @@ fn _create_effect(mut effect: Box<dyn FnMut()>) {
                 // New dependencies are those that are in new dependencies but not in old
                 // dependencies.
                 for new_dependency in listener_ref.dependencies.difference(&old_dependencies) {
-                    new_dependency.signal().subscribe(Callback(Rc::downgrade(
+                    new_dependency.as_ref().subscribe(Callback(Rc::downgrade(
                         // Reference the same closure we are in right now.
                         // When the dependency changes, this closure will be called again.
                         &listener_ref.callback,

@@ -6,7 +6,7 @@ use std::fmt;
 use std::rc::Rc;
 
 use crate::generic_node::GenericNode;
-use crate::reactive::{create_memo, ReadSignal};
+use crate::reactive::{create_memo, ReadSignal, ReadSignalTrait};
 
 /// Internal type for [`View`].
 #[derive(Clone)]

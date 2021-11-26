@@ -6,7 +6,7 @@ use ahash::AHashMap;
 use wasm_bindgen::UnwrapThrowExt;
 
 use crate::generic_node::GenericNode;
-use crate::reactive::create_effect;
+use crate::reactive::{create_effect, ReadSignalTrait};
 use crate::view::{View, ViewType};
 
 /// Insert a [`GenericNode`] under `parent` at the specified `marker`. If `initial` is `Some(_)`,
